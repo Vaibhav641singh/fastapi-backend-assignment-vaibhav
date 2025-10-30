@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Task Manager – FastAPI Client</title>
+  <style>
+    body {
+      font-family: "Segoe UI", sans-serif;
+      margin: 30px;
+      background-color: #fafafa;
+      color: #222;
+    }
+    h1 {
+      color: #0078d7;
+    }
+    div {
+      margin-bottom: 30px;
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+      max-width: 500px;
+    }
+    input, select, button {
+      margin: 5px 0;
+      padding: 8px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    button {
+      background: #0078d7;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    button:hover {
+      background: #005fa3;
+    }
+    pre {
+      background: #f4f4f4;
+      padding: 10px;
+      border-radius: 6px;
+      max-height: 400px;
+      overflow: auto;
+    }
+  </style>
+</head>
+<body>
+  <!-- ------------------------------------------------------------
+       Simple frontend client built by Vaibhav Singh
+       For testing FastAPI Task Management API
+       Date: 30 October 2024
+  ------------------------------------------------------------- -->
+
+  <h1>🚀 FastAPI Task Client</h1>
+
+  <div>
+    <h2>Register User</h2>
+    <input id="regEmail" placeholder="Enter email" />
+    <input id="regPass" placeholder="Enter password" type="password" />
+    <select id="regRole">
+      <option value="user">User</option>
+      <option value="admin">Admin</option>
+    </select>
+    <button onclick="register()">Register</button>
+  </div>
+
+  <div>
+    <h2>Login</h2>
+    <input id="loginEmail" placeholder="Email" />
+    <input id="loginPass" placeholder="Password" type="password" />
+    <button onclick="login()">Login</button>
+  </div>
+
+  <div>
+    <h2>Manage Tasks</h2>
+    <input id="taskTitle" placeholder="Task title" />
+    <input id="taskDesc" placeholder="Task description" />
+    <button onclick="createTask()">Create Task</button>
+    <button onclick="getTasks()">Get My Tasks</button>
+    <pre id="output"></pre>
+  </div>
+
+  <script>
+    let token = null;
+
+    async function register() {
+      const res = await fetch('/api/v1/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: document.getElementById('regEmail').value,
+          password: document.getElementById('regPass').value,
+          role: document.getElementById('regRole').value
+        })
+      });
+      document.getElementById('output').innerText = await res.text();
+    }
+
+    async function login() {
+      const formData = new URLSearchParams();
+      formData.append('username', document.getElementById('loginEmail').value);
+      formData.append('password', document.getElementById('loginPass').value);
+
+      const res = await fetch('/api/v1/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: formData.toString()
+      });
+
+      const data = await res.json();
+      token = data.access_token;
+      document.getElementById('output').innerText = JSON.stringify(data, null, 2);
+    }
+
+    async function createTask() {
+      const res = await fetch('/api/v1/tasks/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify({
+          title: document.getElementById('taskTitle').value,
+          description: document.getElementById('taskDesc').value
+        })
+      });
+      document.getElementById('output').innerText = await res.text();
+    }
+
+    async function getTasks() {
+      const res = await fetch('/api/v1/tasks/', {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      const data = await res.json();
+      document.getElementById('output').innerText = JSON.stringify(data, null, 2);
+    }
+  </script>
+</body>
+</html>
